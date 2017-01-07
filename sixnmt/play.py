@@ -1,4 +1,5 @@
 import click
+import getpass
 
 from .game_state import GameState
 from .player_state import InteractivePlayerStrategy
@@ -11,6 +12,7 @@ def play(players, spectator_mode):
     game = GameState(players)
     if not spectator_mode:
         game.players[0].set_strategy(InteractivePlayerStrategy())
+        game.players[0].id = getpass.getuser()
     game.play_game()
 
 
