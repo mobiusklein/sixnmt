@@ -126,17 +126,29 @@ class GameState(object):
     def play_game(self):
         keep_going = True
         while keep_going:
+            click.secho("======= New Round =======", fg='cyan')
             self.deal_hands()
             self.display_piles()
             self.play_round()
             keep_going = not any(player.running_bulls > 77 for player in self.players)
+        self.display_end_of_game()
 
     def display_piles(self):
         click.secho("Piles:")
         for pile in sorted(self.piles, key=lambda x: x.last.card_number):
             click.secho("\t%s" % (pile,), fg=Pile.pile_colors[pile.running_bulls])
 
+    def display_end_of_game(self):
+        players = sorted(self.players, key=lambda x: x.running_bulls)
+        for i, player in enumerate(players):
+            if i == 0:
+                label = '(Winner)'
+            else:
+                label = ''
+            click.secho(("%d) %s %s" % (
+                i + 1, player, label)), fg='green' if i == 0 else 'white')
+
     def display_players(self):
-        print("Players:")
+        click.secho("Players:")
         for player in self.players:
-            print("\t%s" % (player,))
+            click.secho("\t%s" % (player,))
