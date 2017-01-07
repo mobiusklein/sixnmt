@@ -14,6 +14,20 @@ class Card(object):
 
     @staticmethod
     def compute_bulls(number):
+        """Computes the number of bulls on a card
+        by its number as defined in the card game's
+        rule sheet.
+
+        Parameters
+        ----------
+        number : int
+            The number on the card
+
+        Returns
+        -------
+        int
+            The number of bulls on the card
+        """
         if number % 11 == 0 and number % 5 == 0:
             return 7
         elif number % 11 == 0:

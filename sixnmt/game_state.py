@@ -1,10 +1,21 @@
 import random
 
-from deck import Card, make_deck
-from player_state import PlayerState
+import click
+
+from .deck import make_deck
+from .player_state import PlayerState
+from .utils import NearestValueLookUp
 
 
 class Pile(object):
+
+    pile_colors = NearestValueLookUp([
+        (3, 'cyan'),
+        (5, 'white'),
+        (10, 'yellow'),
+        (15, 'red')
+    ])
+
     def __init__(self, cards):
         self.cards = list(cards)
         self.running_bulls = sum(c.n_bulls for c in self.cards)
@@ -17,14 +28,20 @@ class Pile(object):
         self.cards = []
         self.running_bulls = 0
 
+    @property
+    def last(self):
+        return self.cards[-1]
+
     def __iter__(self):
         return iter(self.cards)
 
     def __len__(self):
         return len(self.cards)
 
-    def __repr__(self):
-        return "Pile(%s)" % (repr(self.cards),)
+    def __str__(self):
+        return "%s|%d bulls" % (
+            ', '.join([str(c.card_number) for c in self]),
+            self.running_bulls)
 
     def __getitem__(self, i):
         return self.cards[i]
@@ -40,7 +57,7 @@ class TurnState(object):
             players,
             [p.select_card_to_play() for p in players]
         ), key=lambda x: x[1].card_number)
-        print('-' * 5)
+        click.secho('-' * 5)
         for player, card in players_ordered:
             player.play_card(card)
 
@@ -58,6 +75,8 @@ class GameState(object):
 
     def deal_hands(self):
         cards = make_deck(self.n_players)
+        random.shuffle(cards)
+        random.shuffle(cards)
         random.shuffle(cards)
         self.piles = [Pile([c]) for c in cards[:4]]
         i = 4
@@ -82,7 +101,7 @@ class GameState(object):
             self.piles[i] = Pile([card])
         else:
             pile = self.piles[minimum_index]
-            print("%s played %r on %r" % (player, card, pile))
+            click.secho("%s played %s on %s" % (player, card, pile))
             if len(pile) >= 5:
                 player.pickup_pile(pile)
                 pile.reset()
@@ -95,12 +114,12 @@ class GameState(object):
     def play_round(self):
         has_cards = True
         while has_cards:
-            print("=" * 10)
+            click.secho("=" * 10)
             self.play_turn()
             self.display_piles()
-            print("")
+            click.secho("")
             self.display_players()
-            print("")
+            click.secho("")
             if len(self.players[0].hand) == 0:
                 has_cards = False
 
@@ -108,15 +127,16 @@ class GameState(object):
         keep_going = True
         while keep_going:
             self.deal_hands()
+            self.display_piles()
             self.play_round()
             keep_going = not any(player.running_bulls > 77 for player in self.players)
 
     def display_piles(self):
-        print("Piles:")
-        for pile in self.piles:
-            print("\t%r" % (pile,))
+        click.secho("Piles:")
+        for pile in sorted(self.piles, key=lambda x: x.last.card_number):
+            click.secho("\t%s" % (pile,), fg=Pile.pile_colors[pile.running_bulls])
 
     def display_players(self):
         print("Players:")
         for player in self.players:
-            print("\t%r" % (player,))
+            print("\t%s" % (player,))
